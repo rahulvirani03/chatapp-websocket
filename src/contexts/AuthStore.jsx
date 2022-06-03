@@ -24,14 +24,15 @@ export default function AuthStore({children}) {
            getAuth();
     },[isLoggedIn])
     const SignUpUser = async(username,email,password) =>{
-        const result = await axios.post(`${URL}/auth/signup`,{
+    
+        const result = await api.post('/auth/signup',{
             username,email,password
         })
         return result 
     }
     const LoginUser = async(username,password) =>{
         console.log(user);
-        const result = await axios.post(`${URL}/auth/login`,{
+        const result = await api.post('auth/login',{
             username,password
         })
         return result 

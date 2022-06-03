@@ -1,4 +1,5 @@
 import { api } from "@api";
+import { URL } from "@utils/constants";
 import React, { createContext, useState,useContext, useEffect } from "react";
 
 import { io } from "socket.io-client";
@@ -8,7 +9,7 @@ export default function ChatStoreProvider({ children }) {
   let chatMessages = [];
  
   //let socket;
-  const socket = io.connect("http://localhost:4000");
+  const socket = io.connect(URL);
   
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
