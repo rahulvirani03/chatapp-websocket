@@ -3,7 +3,7 @@ import { UserOutlined, SolutionOutlined, FileJpgOutlined, SmileOutlined } from '
 const LOCAL_URL ='http://localhost:4000'
 
 const DEPLOYED_URL='https://chatapp-websocket-backend.herokuapp.com'
-export const URL =LOCAL_URL;
+export const URL =DEPLOYED_URL;
 
 
 export const VARIABLE_NAME = "VARIABLE_NAME";
