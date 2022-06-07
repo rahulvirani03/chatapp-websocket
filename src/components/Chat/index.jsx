@@ -278,7 +278,9 @@ export default function Chat({ user, chats, messageStore }) {
     messageStore.socket.on("msg-recieve", (data) => {
       if(data.data.from===receiver_id)
       {
+        message.destroy();
         const newItem = {
+
           message: data.data.message,
           sender: data.data.from,
           time: data.data.time,
@@ -288,7 +290,6 @@ export default function Chat({ user, chats, messageStore }) {
         setTyping(false);
       }
       else{
-      
        message.open(
          {
           style:{
@@ -298,15 +299,13 @@ export default function Chat({ user, chats, messageStore }) {
             margin:"auto",
             textAlign:"justify",
             borderRadius:`${styles.borderRadius}`
-            
-            
           },
           className:"customMessage",
           duration: 3,
            content:<NotificationTile>
              <FlexContainer>
              <Avatar src={AVARTAR_SRC} size={"large"}></Avatar>
-             <Text  className="text">{username}</Text>
+             <Text  className="text">Username</Text>
              </FlexContainer>
              <Text className="message">{data.data.message}</Text>
            </NotificationTile>
