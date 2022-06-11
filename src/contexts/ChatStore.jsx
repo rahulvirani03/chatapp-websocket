@@ -1,16 +1,16 @@
 import { api } from "@api";
 import { URL } from "@utils/constants";
-import React, { createContext, useState,useContext, useEffect } from "react";
+import React, { createContext, useState, useContext, useEffect } from "react";
 
 import { io } from "socket.io-client";
 
 export const ChatStoreContext = createContext();
 export default function ChatStoreProvider({ children }) {
   let chatMessages = [];
- 
+
   //let socket;
   const socket = io.connect(URL);
-  
+
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -22,7 +22,6 @@ export default function ChatStoreProvider({ children }) {
     } else {
       setMessages(res.data);
     }
-  
   };
 
   const sendMessageStore = async (message, id, room, receiver_id) => {
@@ -45,7 +44,7 @@ export default function ChatStoreProvider({ children }) {
       message,
       time,
     });
-   
+
     console.log("after socket");
     const messageData = {
       room: room,
@@ -54,20 +53,22 @@ export default function ChatStoreProvider({ children }) {
       time: time,
     };
     const res = await api.post("/chats/message", { messageData });
-    const lastMessageData ={
-      room:room,
+    const lastMessageData = {
+      room: room,
       to: receiver_id,
       from: id,
       message,
-      time:currentTime,
-      isRead:false
-    }
-   const latMessageRes= await api.post('/chats/set-last-message',{lastMessageData})
-   //console.log(latMessageRes);
-   
-   socket.emit("chat-list-refresh",{
-    to:receiver_id
-  })
+      time: currentTime,
+      isRead: false,
+    };
+    const latMessageRes = await api.post("/chats/set-last-message", {
+      lastMessageData,
+    });
+    //console.log(latMessageRes);
+
+    socket.emit("chat-list-refresh", {
+      to: receiver_id,
+    });
     return messageData;
     //  await socket.emit("send_message", messageData);
     // setMessages((list) => [...list, messageData]);

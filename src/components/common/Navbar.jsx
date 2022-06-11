@@ -1,51 +1,90 @@
-import React, { useEffect,useContext } from 'react'
-import styled from 'styled-components';
-import { NavLink,useHistory } from 'react-router-dom';
-import { Button, Container, FlexBetween, FlexCenter, FlexContainer } from '@components/custom';
-import logo from '@assets/logo.svg';
-import { colors, styles } from '@themes';
-import { Avatar, Button  as AntdButton, notification} from 'antd';
-import { LogoutOutlined } from '@ant-design/icons'
-import Text from 'antd/lib/typography/Text';
-import AuthStore from '@contexts/AuthStore';
-
+import React, { useEffect, useContext } from "react";
+import styled from "styled-components";
+import { NavLink, useHistory } from "react-router-dom";
+import { Container, FlexBetween } from "@components/custom";
+import logo from "@assets/logo.svg";
+import { colors, styles } from "@themes";
+import { Avatar, Button as AntdButton, Dropdown, Menu, Space } from "antd";
+import { LogoutOutlined, UserOutlined } from "@ant-design/icons";
 
 const NavContainer = styled.div`
-    background-color: ${colors.white};
-    box-shadow: ${styles.boxShadow};
-`;
-const Logo = styled(NavLink)`
-`;
-
-const Links = styled.div`
+  background-color: ${colors.white};
+  box-shadow: ${styles.boxShadow};
 `;
 
 const Link = styled(NavLink)`
-    display: inline-block;
-    padding: 1.2em 1em;
-    outline: none;
-    color: ${colors.text};
-    transition: all .2s;
-    border-bottom: 3px solid transparent;
-    &.active {
-        border-bottom: 3px solid ${colors.primary};
-        color: ${colors.primary};
-    }
+  display: inline-block;
+  padding: 1.2em 1em;
+  outline: none;
+  color: ${colors.text};
+  transition: all 0.2s;
+  border-bottom: 3px solid ${colors.primary};
+  &.active {
+    border-bottom: 3px solid ${colors.primary};
+    color: ${colors.primary};
+  }
 `;
+const menu = (user) => (
+  <Menu
+    items={[
+      {
+        icon: <LogoutOutlined />,
+        label: "Logout",
+        key: "1",
+        onClick: () => user.LogoutUser(),
+      },
+    ]}
+  />
+);
 
-export default function Navbar(user) { 
-    console.log(user);
+export default function Navbar({ user }) {
+  console.log("Navbar user ");
+  console.log({ user });
+  return (
+    <NavContainer>
+      <Container>
+        <FlexBetween>
+          <Link to="/"> Chat.in</Link>
 
-    return (
-        <NavContainer>
-            <Container>
-                <FlexBetween>
-                      <Link to="/"> StartUp</Link>
-                    <Links>
-                    <Button type='primary' style={{color:`${colors.white}`}}>Logout</Button>  
-                    </Links>
-                </FlexBetween>
-            </Container>
-        </NavContainer>
-    )
+          <div
+            style={{
+              padding: "10px",
+              borderRadius: `${styles.borderRadius}`,
+              boxShadow: `${styles.boxShadow}`,
+              color: "blue",
+              // backgroundColor: `${colors.white}`,
+              border: `1px solid ${colors.primary}`,
+            }}
+          >
+            <Dropdown
+              arrow={false}
+              overlayStyle={{
+                marginTop: "20px",
+                paddingTop: "15px",
+                color: `${colors.primary}`,
+              }}
+              trigger={["click"]}
+              overlay={menu(user)}
+            >
+              <a
+                style={{ color: `${colors.primary}` }}
+                onClick={(e) => e.preventDefault()}
+              >
+                <Space>
+                  <UserOutlined
+                    style={{
+                      border: "1px solid black",
+                      borderRadius: "50%",
+                      padding: "5px",
+                    }}
+                  />
+                  {user.currentUser?.username}
+                </Space>
+              </a>
+            </Dropdown>
+          </div>
+        </FlexBetween>
+      </Container>
+    </NavContainer>
+  );
 }

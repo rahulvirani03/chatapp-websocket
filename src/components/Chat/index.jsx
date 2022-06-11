@@ -1,25 +1,19 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { useLocation, useHistory } from "react-router-dom";
-import { Container, Text, Button, Title, FlexContainer } from "@components/custom";
+import { Container, Text, Button, FlexContainer } from "@components/custom";
 import styled from "styled-components";
 import { api } from "@api";
 import { colors, styles } from "@themes";
-import { Avatar, Form,message,Modal} from "antd";
+import { Avatar, Form, message, Modal } from "antd";
 import ScrollableFeed from "react-scrollable-feed";
-import { SendOutlined } from "@ant-design/icons";
+import { SendOutlined, ArrowLeftOutlined } from "@ant-design/icons";
 import { AVARTAR_SRC } from "@utils/constants";
+import Loader from "@components/common/Loader";
 
-message.config({
-  icons:{
-    info:undefined
-  }
-})
 const ChatContaier = styled(Container)`
   display: grid;
-
   width: 100%;
   min-height: 90vh;
-  //border:1px solid black;
   max-height: 90vh;
   max-width: ${styles.maxWidth};
   margin-bottom: 10px;
@@ -52,20 +46,15 @@ const ChatContaier = styled(Container)`
       transform: translateY(0%);
       opacity: 1;
     }
-    
   }
-  .customMessage{
-    svg{
-      display:none;
+  .customMessage {
+    svg {
+      display: none;
     }
   }
- 
-  @media screen and (max-width:500px) {
-     // max-width: fit-content;
-     grid-template-rows: 12% 80% 8%;
-      //background-color: black;
-      
-    
+
+  @media screen and (max-width: 500px) {
+    grid-template-rows: 12% 80% 8%;
   }
 `;
 
@@ -81,22 +70,12 @@ const TitleContainer = styled(Container)`
     margin-left: 10px;
     align-items: center;
   }
-  @media screen and (max-width:500px) {
-     height:100%;
-     min-height: 60px;
-      margin-bottom: 1rem;
-    
+  @media screen and (max-width: 500px) {
+    height: 100%;
+    min-height: 60px;
+    margin-bottom: 1rem;
   }
 `;
-
-const MessageContainer =  styled.div`
-   // background-color: red;
-   @media screen and (max-width:500px) {
-    padding-top: 0.5rem;
-
-    
-  }
-`
 
 const InputContainer = styled(Form)`
   display: flex;
@@ -129,8 +108,6 @@ const CustomInput = styled.input`
 
 const SelfMessage = styled.div`
   display: grid;
- // border:1px solid red;
-  //border:5px solid pink;
   grid-template-columns: 1fr 30px;
   background-color: ${colors.primary};
   color: ${colors.white};
@@ -189,30 +166,44 @@ const TimeTag = styled.p`
 const NotificationTile = styled.div`
   display: flex;
   flex-direction: column;
-  width:90%;
-  margin:auto;
-  text-align:justify;
+  width: 100%;
+  margin: auto;
+  padding:"0px"
+  text-align: justify;
   border-radius: ${styles.borderRadius};
+  // background-color: ${colors.primary};
 
-.text{
-  margin:auto 5px; 
-}
-.message{
-  margin-left:45px;
-}
+  .text {
+    margin: auto 5px;
+    margin-left: 10px;
+    width: 100%;
 
-  `
+    //border-bottom: 1px solid #eae4e4;
+  }
+  .message {
+    //margin-left: 50px;
+    margin-top:1em;
+    padding:1em 0;
+    border:1px solid #e5e5e5;
+  }
 
+  .userTag {
+    border-radius: ${styles.borderRadius};
+    background-color: ${colors.primary};
+    color: ${colors.white};
+    width: 100%;
+    align-items: center;
   
-
+    padding:5px 0;
+  }
+`;
 
 export default function Chat({ user, chats, messageStore }) {
   const location = useLocation();
   const username = location.state.username;
   const history = useHistory();
+  const [loading, setLoading] = useState(false);
   const [socketMessage, setSocketMessage] = useState();
-  const [notification,setNotification]=useState();
-  const [notificationModal,setNotificationModal]=useState(false);
   const [locationKeys, setLocationKeys] = useState([]);
   const [selectedChat, setSelectedChat] = useState([]);
   const [newMessage, setNewMessage] = useState();
@@ -220,8 +211,8 @@ export default function Chat({ user, chats, messageStore }) {
   const room = location.state.id;
   const receiver_id = location.state.other_id;
 
-
   const sendMessage = async () => {
+    if (!socketMessage) return;
     const currentTime = new Date();
     let currentHours = currentTime.getHours();
     let currentMinute = currentTime.getMinutes();
@@ -249,7 +240,7 @@ export default function Chat({ user, chats, messageStore }) {
       receiver_id
     );
     console.log(res);
-   
+
     setTyping(false);
   };
 
@@ -262,12 +253,14 @@ export default function Chat({ user, chats, messageStore }) {
   };
 
   const getSelectedChat = async () => {
+    setLoading(true);
     const res = await api.post("/chats/messages", { room: room });
     if (res.data === "No chats found") {
       console.log("No chats found");
     } else {
       setSelectedChat(res.data);
     }
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -276,11 +269,9 @@ export default function Chat({ user, chats, messageStore }) {
 
   useEffect(() => {
     messageStore.socket.on("msg-recieve", (data) => {
-      if(data.data.from===receiver_id)
-      {
+      if (data.data.from === receiver_id) {
         message.destroy();
         const newItem = {
-
           message: data.data.message,
           sender: data.data.from,
           time: data.data.time,
@@ -288,47 +279,56 @@ export default function Chat({ user, chats, messageStore }) {
         setNewMessage(newItem);
         //chats.getChats();
         setTyping(false);
-      }
-      else{
-       message.open(
-         {
-          style:{
+      } else {
+        console.log(chats.chatList);
+        const otherUser = chats.chatList.find(
+          (user) =>
+            user.user1.id === data.data.from || user.user2.id === data.data.from
+        );
+        console.log(otherUser);
+        const otherUsername =
+          otherUser.user1.id === data.data.from
+            ? otherUser.user1.username
+            : otherUser.user2.username;
+        console.log(otherUsername);
+        message.open({
+          style: {
             display: "flex",
             flexDirection: "column",
-            width:"90%",
-            margin:"auto",
-            textAlign:"justify",
-            borderRadius:`${styles.borderRadius}`
+            width: "90%",
+            padding: "0px",
+            margin: "auto",
+            textAlign: "justify",
+            borderRadius: `${styles.borderRadius}`,
+            boxShadow: `${styles.boxShadow}`,
           },
-          className:"customMessage",
+          className: "customMessage",
           duration: 3,
-           content:<NotificationTile>
-             <FlexContainer>
-             <Avatar src={AVARTAR_SRC} size={"large"}></Avatar>
-             <Text  className="text">Username</Text>
-             </FlexContainer>
-             <Text className="message">{data.data.message}</Text>
-           </NotificationTile>
-          
-         }
-         
-       )
-      
+          content: (
+            <NotificationTile>
+              <FlexContainer className="userTag">
+                <Avatar
+                  style={{ marginLeft: "5px" }}
+                  src={AVARTAR_SRC}
+                  size={"large"}
+                ></Avatar>
+                <Text className="text">{otherUsername}</Text>
+              </FlexContainer>
+              <Text className="message">{data.data.message}</Text>
+            </NotificationTile>
+          ),
+        });
       }
-     
     });
   }, []);
 
   useEffect(() => {
     messageStore.socket.on("typing-receive", (data) => {
       console.log(data);
-      console.log(receiver_id)
-      if(data.data.from === receiver_id)
-      {
-        setTyping(true)
+      console.log(receiver_id);
+      if (data.data.from === receiver_id) {
+        setTyping(true);
       }
-
-     // setTyping(true);
     });
   }, []);
 
@@ -345,84 +345,94 @@ export default function Chat({ user, chats, messageStore }) {
       if (history.action === "POP") {
         if (locationKeys[1] === location.key) {
           setLocationKeys(([_, ...keys]) => keys);
-         chats.getChats();
-         chats.markAsRead(room)
+          chats.getChats();
+          chats.markAsRead(room);
         } else {
           setLocationKeys((keys) => [location.key, ...keys]);
           chats.getChats();
-          chats.markAsRead(room)
+          chats.markAsRead(room);
         }
       }
     });
   }, [locationKeys]);
-
-  
+  const handleBack = () => {
+    history.push("/");
+    chats.getChats();
+    chats.markAsRead(room);
+  };
   return (
     <ChatContaier style={{ height: "100%" }}>
-      <TitleContainer>
-        <Avatar src={AVARTAR_SRC} size={"large"}></Avatar>
-        <Text className="text">{username}</Text>
-      </TitleContainer>
-      <ScrollableFeed>
-        {selectedChat?.map((item) => {
-          return (
-            <div style={{ paddingBottom: "2px" }}>
-              {item.sender === user.currentUser.id ? (
-                <SelfMessage>
-                  <Text style={{ padding: "1px" }}>{item.message}</Text>
-                  <TimeTag>{item.time}</TimeTag>
-                </SelfMessage>
-              ) : (
-                <OtherMessage>
-                  <Text style={{ padding: "1px" }}>{item.message}</Text>
-                  <TimeTag>{item.time}</TimeTag>
-                </OtherMessage>
-              )}
-            </div>
-          );
-        })}
-        {typing && (
-          <TypingAnimation
-            style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr" }}
-          >
-            <span className="typing-dot"></span>
-            <span className="typing-dot"></span>
-            <span className="typing-dot"></span>
-          </TypingAnimation>
-        )}
-      </ScrollableFeed>
-      
-    
-      <InputContainer>
-        <CustomInput
-          style={{
-            width: "90%",
-            display: "flex",
-            padding: "0px",
-            border: "1px solid #b4afaf",
-            margin: "0 auto",
-            borderRadius: "20px",
-          }}
-          value={socketMessage}
-          onChange={(e) => handleMessageChange(e)}
-        />
-        <Button
-          type="primary"
-          style={{
-            color: `${colors.white}`,
-            width: "10%",
-            height: "90%",
-            minHeight:"50px",
-          //  borderRadius: "10px",
-            margin: "auto 3px",
-          }}
-          onClick={sendMessage}
-        >
-          <SendOutlined />
-        </Button>
-      </InputContainer>
-     
-     
+      {loading ? (
+        <Loader />
+      ) : (
+        <>
+          <TitleContainer>
+            <ArrowLeftOutlined
+              onClick={() => handleBack()}
+              style={{ paddingRight: "10px" }}
+              size="xl"
+            />
+            <Avatar src={AVARTAR_SRC} size={"large"}></Avatar>
+            <Text className="text">{username}</Text>
+          </TitleContainer>
+          <ScrollableFeed>
+            {selectedChat?.map((item) => {
+              return (
+                <div style={{ paddingBottom: "2px" }}>
+                  {item.sender === user.currentUser.id ? (
+                    <SelfMessage>
+                      <Text style={{ padding: "1px" }}>{item.message}</Text>
+                      <TimeTag>{item.time}</TimeTag>
+                    </SelfMessage>
+                  ) : (
+                    <OtherMessage>
+                      <Text style={{ padding: "1px" }}>{item.message}</Text>
+                      <TimeTag>{item.time}</TimeTag>
+                    </OtherMessage>
+                  )}
+                </div>
+              );
+            })}
+            {typing && (
+              <TypingAnimation
+                style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr" }}
+              >
+                <span className="typing-dot"></span>
+                <span className="typing-dot"></span>
+                <span className="typing-dot"></span>
+              </TypingAnimation>
+            )}
+          </ScrollableFeed>
+          <InputContainer>
+            <CustomInput
+              style={{
+                width: "90%",
+                display: "flex",
+                padding: "0px",
+                border: "1px solid #b4afaf",
+                margin: "0 auto",
+                borderRadius: "20px",
+              }}
+              value={socketMessage}
+              onChange={(e) => handleMessageChange(e)}
+            />
+            <Button
+              type="primary"
+              style={{
+                color: `${colors.white}`,
+                width: "10%",
+                height: "90%",
+                minHeight: "50px",
+                //  borderRadius: "10px",
+                margin: "auto 3px",
+              }}
+              onClick={sendMessage}
+            >
+              <SendOutlined />
+            </Button>
+          </InputContainer>
+        </>
+      )}
     </ChatContaier>
   );
 }

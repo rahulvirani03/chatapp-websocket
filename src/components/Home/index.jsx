@@ -15,10 +15,11 @@ export default function index({ user, chats, messageStore }) {
   const history = useHistory();
   const [tempChatList, setTempChatList] = useState(chats.chatList);
   const checkAuth = () => {
+    console.log(user);
     if (!user.isLoggedIn) {
       history.push("/landing");
     } else {
-      messageStore.socket.emit("add-user", user.currentUser.id);
+      messageStore.socket.emit("add-user", user?.currentUser.id);
     }
   };
   useEffect(() => {
@@ -26,7 +27,6 @@ export default function index({ user, chats, messageStore }) {
       messageStore.socket.emit("unload", user.currentUser.id);
     });
   }, []);
-
 
   const handleClick = (item) => {
     console.log(item);
@@ -53,7 +53,6 @@ export default function index({ user, chats, messageStore }) {
     });
   };
 
-
   const createChatRoom = async (item) => {
     let localRoomId;
     const currentId = user.currentUser.id;
@@ -79,10 +78,9 @@ export default function index({ user, chats, messageStore }) {
       state: {
         id: localRoomId,
         other_id: otherId,
-        username:  item.username,
+        username: item.username,
       },
-    })
-
+    });
   };
   useEffect(() => {
     checkAuth();
@@ -101,7 +99,9 @@ export default function index({ user, chats, messageStore }) {
   const NewChatRoomList = () => {
     return (
       <Container>
-        <Text>Select a User to Start a New Chat</Text>
+        {chats.users.length > 0 && (
+          <Text>Select a User to Start a New Chat</Text>
+        )}
         <List itemLayout="vertical">
           {chats.users.map((item) => {
             return (
@@ -264,7 +264,7 @@ export default function index({ user, chats, messageStore }) {
   };
   return (
     <Container>
-      <Text>Previous Chats</Text>
+      {chats.chatList.length > 0 && <Text>Previous Chats</Text>}
       <List itemLayout="vertical">
         {tempChatList?.map((item) => {
           return (
@@ -279,7 +279,7 @@ export default function index({ user, chats, messageStore }) {
                 cursor: "pointer",
               }}
             >
-              {item.lastMessage.from === user.currentUser.id ? (
+              {item.lastMessage.from === user.currentUser?.id ? (
                 <SelfTile item={item} />
               ) : (
                 <OtherTile item={item} />
