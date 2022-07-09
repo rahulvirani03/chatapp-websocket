@@ -40,10 +40,16 @@ export default function index({ user }) {
       const res = await user.LoginUser(username, password.trim());
       console.log(res);
       setLoading(false);
-      localStorage.setItem("token", res.data.token);
-      history.goBack();
-      window.location.reload();
-      message.success(<strong>Signed In Successfully</strong>);
+      if (res.data.message === "Success") {
+        message.success(<strong>Signed In Successfully</strong>);
+        localStorage.setItem("token", res.data.token);
+        console.log(res.data.user);
+        user.setCurrentUser(res.data.user);
+        user.setIsLoggedIn(true);
+      } else {
+        console.log("inside else");
+        message.error(<strong>{res.data}</strong>);
+      }
     } catch (err) {
       setLoading(false);
       message.error(<strong>{err.message}</strong>);
@@ -74,10 +80,15 @@ export default function index({ user }) {
       );
       console.log(res);
       setLoading(false);
-      localStorage.setItem("token", res.data.token);
-      history.goBack();
-      window.location.reload();
-      message.success(<strong>Registered Successfully</strong>);
+      if (res.data.message === "Success") {
+        message.success(<strong>Signed In Successfully</strong>);
+        localStorage.setItem("token", res.data.token);
+        console.log(res.data.user);
+        user.setCurrentUser(res.data.user);
+        user.setIsLoggedIn(true);
+      } else {
+        message.error(<strong>{res.data}</strong>);
+      }
     } catch (err) {
       setLoading(false);
       message.error(<strong>{err.message}</strong>);

@@ -8,17 +8,18 @@ export default function AuthStore({ children }) {
   const [currentUser, setCurrentUser] = useState();
   const [isLoggedIn, setIsLoggedIn] = useState(null);
   const [loading, setLoading] = useState(true);
+
   const getAuth = async () => {
     const result = await api.post("/auth/token", {});
+    console.log(result);
     console.log(result.data.isLoggedIn);
     setIsLoggedIn(result.data.isLoggedIn);
     setCurrentUser(result.data.user);
-    console.log("user set");
     setLoading(false);
   };
   useEffect(() => {
     getAuth();
-  }, [isLoggedIn]);
+  }, []);
   const SignUpUser = async (username, email, password) => {
     console.log(username, email, password);
     const result = await api.post("/auth/signup", {
@@ -43,7 +44,16 @@ export default function AuthStore({ children }) {
     localStorage.setItem("token", "");
     window.location.reload();
   };
-  const user = { SignUpUser, isLoggedIn, LoginUser, currentUser, LogoutUser };
+  const user = {
+    getAuth,
+    SignUpUser,
+    isLoggedIn,
+    LoginUser,
+    currentUser,
+    LogoutUser,
+    setCurrentUser,
+    setIsLoggedIn,
+  };
 
   if (loading) return <Loader />;
   return <AuthContext.Provider value={user}>{children}</AuthContext.Provider>;

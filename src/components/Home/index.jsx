@@ -15,11 +15,13 @@ export default function index({ user, chats, messageStore }) {
   const history = useHistory();
   const [tempChatList, setTempChatList] = useState(chats.chatList);
   const checkAuth = () => {
-    console.log(user);
+    console.log(user.currentUser);
     if (!user.isLoggedIn) {
       history.push("/landing");
     } else {
+      console.log("inside else ");
       messageStore.socket.emit("add-user", user?.currentUser.id);
+      getLatestMessages();
     }
   };
   useEffect(() => {
@@ -84,7 +86,7 @@ export default function index({ user, chats, messageStore }) {
   };
   useEffect(() => {
     checkAuth();
-  }, [user]);
+  }, []);
   const getLatestMessages = async () => {
     const res = await api.post("/chats/chat-list", { id: user.currentUser.id });
     setTempChatList(res.data.chats);
